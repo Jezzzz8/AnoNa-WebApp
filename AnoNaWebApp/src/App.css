@@ -1,0 +1,89 @@
+/* App.css - Green Nature Theme Additions */
+.btn-primary {
+  background: linear-gradient(135deg, var(--green-forest) 0%, var(--green-deep) 100%);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  padding: 16px 24px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  background: linear-gradient(135deg, var(--green-deep) 0%, #143D30 100%);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: var(--green-pale);
+  color: var(--green-forest);
+  border: 1px solid var(--green-light);
+  border-radius: 16px;
+  padding: 14px 22px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.btn-secondary:hover {
+  background: var(--green-light);
+  transform: translateY(-1px);
+}
+
+.card-hover {
+  transition: var(--transition-smooth);
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.option-card {
+  background: var(--bg-card);
+  border: 2px solid var(--border-light);
+  border-radius: 20px;
+  padding: 18px 20px;
+  transition: var(--transition-smooth);
+  cursor: pointer;
+}
+
+.option-card:hover {
+  border-color: var(--green-mint);
+  background: white;
+  transform: translateX(4px);
+}
+
+.timer-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: conic-gradient(var(--green-mint) 0deg, var(--green-pale) 0deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.timer-circle::before {
+  content: '';
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background: white;
+  border-radius: 50%;
+}
+
+.chart-bar {
+  background: linear-gradient(90deg, var(--green-mint), var(--green-emerald));
+  border-radius: 10px;
+  transition: width 0.6s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
