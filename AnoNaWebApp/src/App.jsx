@@ -9,6 +9,10 @@ import Vote from './pages/Vote';
 import Waiting from './pages/Waiting';
 import Result from './pages/Result';
 import Share from './pages/Share';
+import CreatePullEvent from './pages/CreatePullEvent';
+import PullShare from './pages/PullShare';
+import PullReveal from './pages/PullReveal';
+import PullOrganizer from './pages/PullOrganizer';
 
 function App() {
   return (
@@ -36,6 +40,10 @@ function App() {
           <Route path="/waiting/:id" element={<Waiting />} />
           <Route path="/result/:id" element={<Result />} />
           <Route path="/share/:id" element={<Share />} />
+          <Route path="/pull/create" element={<CreatePullEvent />} />
+          <Route path="/pull/share/:id" element={<PullShare />} />
+          <Route path="/pull/:id" element={<PullReveal />} />
+          <Route path="/pull/organizer/:id" element={<PullOrganizer />} />
         </Routes>
       </AnimatePresence>
     </BrowserRouter>
