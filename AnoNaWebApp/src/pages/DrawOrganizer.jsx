@@ -1,12 +1,14 @@
+// pages/DrawOrganizer.jsx
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { getDeviceId } from '../lib/voteUtils';
-import { Loader2, Users, Eye } from 'lucide-react';
+import { Loader2, Users, Eye, AlertCircle } from 'lucide-react';
 import FloatingBackButton from '../components/FloatingBackButton';
 import Illustration from '../components/Illustration';
+import LoadingSpinner from '../components/LoadingSpinner';
 
-export default function PullOrganizer() {
+export default function DrawOrganizer() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [event, setEvent] = useState(null);
@@ -14,6 +16,7 @@ export default function PullOrganizer() {
   const [loading, setLoading] = useState(true);
   const [unauthorized, setUnauthorized] = useState(false);
   const [offline, setOffline] = useState(!navigator.onLine);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const handleOnline = () => setOffline(false);
@@ -28,17 +31,14 @@ export default function PullOrganizer() {
 
   useEffect(() => {
     if (!offline) fetchEvent();
-    else {
-      setLoading(false);
-      setError('You are offline. Cannot load organizer dashboard.');
-    }
+    else setLoading(false);
 
     const subscription = supabase
-      .channel(`pull-organizer-${id}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'pull_events', filter: `id=eq.${id}` }, payload => {
+      .channel(`draw-organizer-${id}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'draw_events', filter: `id=eq.${id}` }, payload => {
         if (payload.new) setEvent(payload.new);
       })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'pull_assignments', filter: `event_id=eq.${id}` }, () => {
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'draw_assignments', filter: `event_id=eq.${id}` }, () => {
         fetchRevealCount();
       })
       .subscribe();
@@ -46,7 +46,7 @@ export default function PullOrganizer() {
   }, [id, offline]);
 
   const fetchEvent = async () => {
-    const { data, error } = await supabase.from('pull_events').select('*').eq('id', id).single();
+    const { data, error } = await supabase.from('draw_events').select('*').eq('id', id).single();
     if (error || !data) {
       navigate('/');
       return;
@@ -64,21 +64,31 @@ export default function PullOrganizer() {
 
   const fetchRevealCount = async () => {
     const { count, error } = await supabase
-      .from('pull_assignments')
+      .from('draw_assignments')
       .select('*', { count: 'exact', head: true })
       .eq('event_id', id)
       .eq('revealed', true);
     if (!error) setRevealedCount(count);
   };
 
-  if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-[#52B788]" size={40} /></div>;
-  if (offline) return (
-    <div className="h-screen flex flex-col items-center justify-center p-8 text-center">
-      <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center mb-4">
-        <span className="text-3xl">📡</span>
+  if (offline) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center mb-4">
+          <span className="text-3xl">📡</span>
+        </div>
+        <h2 className="text-xl font-bold text-[#1B4D3E] mb-2">No Internet Connection</h2>
+        <p className="text-[#84A98C] text-sm">Please connect to the internet to view the organizer dashboard.</p>
+        <button onClick={() => window.location.reload()} className="mt-4 px-6 py-2 bg-[#52B788] text-white rounded-xl">Retry</button>
       </div>
-      <h2 className="text-xl font-bold text-[#1B4D3E]">No Internet Connection</h2>
-      <p className="text-[#84A98C] text-sm">Cannot load dashboard while offline.</p>
+    );
+  }
+
+  if (loading) return <LoadingSpinner text="Loading..." />;
+  if (error) return (
+    <div className="h-screen flex flex-col items-center justify-center p-8 text-center">
+      <AlertCircle size={48} className="text-[#84A98C] mb-4" />
+      <h2 className="text-xl font-bold text-[#1B4D3E]">{error}</h2>
       <button onClick={() => navigate('/')} className="btn-primary mt-4 w-auto px-6 py-2">Go Home</button>
     </div>
   );

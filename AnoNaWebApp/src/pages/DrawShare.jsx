@@ -1,3 +1,4 @@
+// pages/DrawShare.jsx
 import { useParams, useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { Copy, Share2, CheckCircle } from 'lucide-react';
@@ -7,11 +8,11 @@ import toast from 'react-hot-toast';
 import Illustration from '../components/Illustration';
 import FloatingBackButton from '../components/FloatingBackButton';
 
-export default function PullShare() {
+export default function DrawShare() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
-  const link = `${window.location.origin}/pull/${id}`;
+  const link = `${window.location.origin}/draw/${id}`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(link);
@@ -22,7 +23,7 @@ export default function PullShare() {
 
   const shareNative = () => {
     if (navigator.share) {
-      navigator.share({ title: 'PullNa Event', url: link });
+      navigator.share({ title: 'DrawNa Event', url: link });
     } else copyLink();
   };
 
@@ -45,7 +46,7 @@ export default function PullShare() {
               {copied ? <CheckCircle size={16} className="text-[#52B788]" /> : <Copy size={16} />}
             </button>
           </div>
-          <button onClick={shareNative} className="w-full py-4 bg-gradient-to-r from-[#1B4D3E] to-[#2D6A4F] text-white rounded-xl flex items-center justify-center gap-2">
+          <button onClick={shareNative} className="w-full py-4 bg-gradient-to-r from-[#1B4D3E] to-[#2D6A4F] text-black rounded-xl flex items-center justify-center gap-2">
             <Share2 size={18} /> Send to Chat
           </button>
         </motion.div>

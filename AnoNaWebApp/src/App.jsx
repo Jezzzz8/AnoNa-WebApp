@@ -3,16 +3,15 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AnimatePresence } from 'framer-motion';
 import Landing from './pages/Landing';
-import CategorySelect from './pages/CategorySelect';
 import CreatePoll from './pages/CreatePoll';
-import Vote from './pages/Vote';
-import Waiting from './pages/Waiting';
-import Result from './pages/Result';
-import Share from './pages/Share';
-import CreatePullEvent from './pages/CreatePullEvent';
-import PullShare from './pages/PullShare';
-import PullReveal from './pages/PullReveal';
-import PullOrganizer from './pages/PullOrganizer';
+import Vote from './pages/PollVote';
+import Waiting from './pages/PollWaiting';
+import Result from './pages/PollResult';
+import Share from './pages/PollShare';
+import CreateDrawEvent from './pages/CreateDrawEvent';
+import DrawShare from './pages/DrawShare';
+import DrawReveal from './pages/DrawReveal';
+import DrawOrganizer from './pages/DrawOrganizer';
 
 function App() {
   return (
@@ -34,16 +33,15 @@ function App() {
       <AnimatePresence mode="wait">
         <Routes>
           <Route path="/" element={<Landing />} />
-          <Route path="/category" element={<CategorySelect />} />
-          <Route path="/create" element={<CreatePoll />} />
+          <Route path="/poll/create" element={<CreatePoll />} />
           <Route path="/poll/:id" element={<Vote />} />
-          <Route path="/waiting/:id" element={<Waiting />} />
-          <Route path="/result/:id" element={<Result />} />
-          <Route path="/share/:id" element={<Share />} />
-          <Route path="/pull/create" element={<CreatePullEvent />} />
-          <Route path="/pull/share/:id" element={<PullShare />} />
-          <Route path="/pull/:id" element={<PullReveal />} />
-          <Route path="/pull/organizer/:id" element={<PullOrganizer />} />
+          <Route path="/poll/waiting/:id" element={<Waiting />} />
+          <Route path="/poll/result/:id" element={<Result />} />
+          <Route path="/poll/share/:id" element={<Share />} />
+          <Route path="/draw/create" element={<CreateDrawEvent />} />
+          <Route path="/draw/share/:id" element={<DrawShare />} />
+          <Route path="/draw/:id" element={<DrawReveal />} />
+          <Route path="/draw/organizer/:id" element={<DrawOrganizer />} />
         </Routes>
       </AnimatePresence>
     </BrowserRouter>

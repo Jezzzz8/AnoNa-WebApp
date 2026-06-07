@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Illustration from '../components/Illustration';
 import anonaLogo from '../assets/icons/anona_logo.svg';
 
-// Expandable link join card (uses old btn-secondary style)
+// Expandable link join card (works with PollNa and DrawNa links)
 function LinkJoinCard() {
   const [isOpen, setIsOpen] = useState(false);
   const [link, setLink] = useState('');
@@ -16,7 +16,7 @@ function LinkJoinCard() {
     if (!link.trim()) return;
     const id = link.trim().split('/').pop();
     if (link.includes('/poll/')) navigate(`/poll/${id}`);
-    else if (link.includes('/pull/')) navigate(`/pull/${id}`);
+    else if (link.includes('/draw/')) navigate(`/draw/${id}`);
     else navigate(`/poll/${id}`);
   };
 
@@ -44,7 +44,7 @@ function LinkJoinCard() {
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="Paste poll or pull link..."
+                  placeholder="Paste poll or draw link..."
                   value={link}
                   onChange={(e) => setLink(e.target.value)}
                   className="flex-1 px-4 py-2 bg-white border border-[#D8F3DC] rounded-xl text-sm focus:border-[#52B788] focus:ring-1 focus:ring-[#52B788]"
@@ -57,7 +57,7 @@ function LinkJoinCard() {
                 </button>
               </div>
               <p className="text-xs text-[#84A98C] mt-2">
-                Works with PollNa (…/poll/xxx) and PullNa (…/pull/xxx) links.
+                Works with PollNa (…/poll/xxx) and DrawNa (…/draw/xxx) links.
               </p>
             </div>
           </motion.div>
@@ -73,16 +73,16 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-[#F5FEF7] to-white flex flex-col items-center justify-center px-5 py-8">
       <div className="w-full max-w-sm mx-auto">
-        {/* Logo & Title */}
+        {/* Logo & Title - tighter together */}
         <div className="text-center">
-          <div className="flex justify-center mb-2">
+          <div className="flex justify-center">
             <img
               src={anonaLogo}
               alt="AnoNa Logo"
-              className="w-16 h-16 md:w-20 md:h-20 object-contain"
+              className="w-10 h-10 md:w-12 md:h-12 object-contain"
             />
           </div>
-          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-[#1B4D3E] to-[#52B788] bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-[#1B4D3E] to-[#52B788] bg-clip-text text-transparent -mt-1">
             AnoNa
           </h1>
         </div>
@@ -92,12 +92,12 @@ export default function Landing() {
           <Illustration type="socialInteraction" size="lg" animate={false} />
         </div>
 
-        {/* Primary Action Buttons (old green style) */}
+        {/* Primary Action Buttons */}
         <div className="space-y-3">
           <motion.button
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => navigate('/category')}
+            onClick={() => navigate('/poll/create')}
             className="btn-primary flex items-center justify-center gap-2"
           >
             <PlusCircle size={22} className="animate-pulse" />
@@ -107,11 +107,11 @@ export default function Landing() {
           <motion.button
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => navigate('/pull/create')}
+            onClick={() => navigate('/draw/create')}
             className="btn-primary flex items-center justify-center gap-2"
           >
             <Gift size={22} />
-            Start PullNa
+            Start DrawNa
           </motion.button>
         </div>
 

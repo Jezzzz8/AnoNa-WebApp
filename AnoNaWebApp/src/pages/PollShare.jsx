@@ -88,7 +88,7 @@ export default function Share() {
           {/* Share Button */}
           <button
             onClick={shareNative}
-            className="w-full py-4 bg-gradient-to-r from-[#1B4D3E] to-[#2D6A4F] text-white rounded-xl flex items-center justify-center gap-2 text-base font-semibold shadow-md hover:shadow-lg transition-all"
+            className="w-full py-4 bg-gradient-to-r from-[#1B4D3E] to-[#2D6A4F] text-black rounded-xl flex items-center justify-center gap-2 text-base font-semibold shadow-md hover:shadow-lg transition-all"
           >
             <Share2 size={18} /> Send to Chat
           </button>

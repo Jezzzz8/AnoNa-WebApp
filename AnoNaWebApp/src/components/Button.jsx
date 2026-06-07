@@ -13,9 +13,9 @@ export default function Button({
   fullWidth = true
 }) {
   const variants = {
-    primary: 'bg-gradient-to-r from-[#1B4D3E] to-[#2D6A4F] text-white shadow-md hover:shadow-lg active:shadow-sm',
+    primary: 'bg-gradient-to-r from-[#1B4D3E] to-[#2D6A4F] text-black shadow-md hover:shadow-lg active:shadow-sm',
     secondary: 'bg-[#E9F5E8] text-[#2D6A4F] hover:bg-[#D8F3DC] border border-[#D8F3DC]',
-    danger: 'bg-red-500 text-white hover:bg-red-600 shadow-md',
+    danger: 'bg-red-500 text-black hover:bg-red-600 shadow-md',
     outline: 'border-2 border-[#2D6A4F] text-[#2D6A4F] hover:bg-[#E9F5E8]'
   };
 

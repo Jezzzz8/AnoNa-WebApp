@@ -1,3 +1,4 @@
+// pages/DrawReveal.jsx
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -7,8 +8,9 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import FloatingBackButton from '../components/FloatingBackButton';
 import Illustration from '../components/Illustration';
+import LoadingSpinner from '../components/LoadingSpinner';
 
-export default function PullReveal() {
+export default function DrawReveal() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [event, setEvent] = useState(null);
@@ -33,14 +35,11 @@ export default function PullReveal() {
 
   useEffect(() => {
     if (!offline) fetchEvent();
-    else {
-      setError('You are offline. Please check your internet connection.');
-      setLoading(false);
-    }
+    else setLoading(false);
 
     const subscription = supabase
-      .channel(`pull-${id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'pull_assignments', filter: `event_id=eq.${id}` }, payload => {
+      .channel(`draw-${id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'draw_assignments', filter: `event_id=eq.${id}` }, payload => {
         if (payload.new && payload.new.participant === selectedName) {
           setRecipient(payload.new.recipient);
           setRevealed(payload.new.revealed);
@@ -52,8 +51,12 @@ export default function PullReveal() {
 
   const fetchEvent = async () => {
     try {
-      const { data, error } = await supabase.from('pull_events').select('*').eq('id', id).single();
-      if (error || !data) throw new Error('Event not found');
+      const { data, error } = await supabase.from('draw_events').select('*').eq('id', id).single();
+      if (error || !data) {
+        setError('Link not found');
+        setLoading(false);
+        return;
+      }
       if (data.expires_at && new Date(data.expires_at) < new Date()) {
         setError('This event has expired');
         setLoading(false);
@@ -62,10 +65,10 @@ export default function PullReveal() {
       setEvent(data);
       setParticipantsList(data.participants);
 
-      const savedName = localStorage.getItem(`pullna_${id}_participant`);
+      const savedName = localStorage.getItem(`drawna_${id}_participant`);
       if (savedName && data.participants.includes(savedName)) {
         const { data: revealData } = await supabase
-          .from('pull_assignments')
+          .from('draw_assignments')
           .select('recipient, revealed')
           .eq('event_id', id)
           .eq('participant', savedName)
@@ -77,7 +80,7 @@ export default function PullReveal() {
         }
       }
     } catch (err) {
-      setError(err.message);
+      setError('Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -94,7 +97,7 @@ export default function PullReveal() {
     const deviceId = getDeviceId();
 
     const { data: existing } = await supabase
-      .from('pull_assignments')
+      .from('draw_assignments')
       .select('revealed')
       .eq('event_id', id)
       .eq('participant', selectedName)
@@ -104,7 +107,7 @@ export default function PullReveal() {
       toast.error('You already revealed your recipient');
       setRevealed(true);
       const { data: assign } = await supabase
-        .from('pull_assignments')
+        .from('draw_assignments')
         .select('recipient')
         .eq('event_id', id)
         .eq('participant', selectedName)
@@ -114,7 +117,7 @@ export default function PullReveal() {
     }
 
     const { error: updateErr } = await supabase
-      .from('pull_assignments')
+      .from('draw_assignments')
       .update({ revealed: true, revealed_at: new Date().toISOString() })
       .eq('event_id', id)
       .eq('participant', selectedName);
@@ -125,16 +128,16 @@ export default function PullReveal() {
     }
 
     try {
-      await supabase.rpc('increment_pull_reveal_count', { event_id: id });
+      await supabase.rpc('increment_draw_reveal_count', { event_id: id });
     } catch (rpcErr) {
-      console.warn('RPC failed (maybe function missing):', rpcErr);
+      console.warn('RPC function not found – reveal count not incremented');
     }
 
-    localStorage.setItem(`pullna_${id}_participant`, selectedName);
-    saveVoteRecord(`pull_${id}_${selectedName}`, deviceId);
+    localStorage.setItem(`drawna_${id}_participant`, selectedName);
+    saveVoteRecord(`draw_${id}_${selectedName}`, deviceId);
 
     const { data: assignment } = await supabase
-      .from('pull_assignments')
+      .from('draw_assignments')
       .select('recipient')
       .eq('event_id', id)
       .eq('participant', selectedName)
@@ -142,18 +145,39 @@ export default function PullReveal() {
 
     setRecipient(assignment?.recipient || '');
     setRevealed(true);
-    toast.success(`You are gifting to: ${assignment?.recipient}`);
+    toast.success(`You are assigned to: ${assignment?.recipient}`);
   };
 
-  if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-[#52B788]" size={40} /></div>;
-  if (error) return (
-    <div className="h-screen flex flex-col items-center justify-center p-8 text-center">
-      <AlertCircle size={48} className="text-[#84A98C] mb-4" />
-      <h2 className="text-xl font-bold text-[#1B4D3E]">{error}</h2>
-      <button onClick={() => navigate('/')} className="btn-primary mt-4 w-auto px-6 py-2">Go Home</button>
-    </div>
-  );
+  if (offline) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center mb-4">
+          <span className="text-3xl">📡</span>
+        </div>
+        <h2 className="text-xl font-bold text-[#1B4D3E] mb-2">No Internet Connection</h2>
+        <p className="text-[#84A98C] text-sm">Please connect to the internet to reveal your assignment.</p>
+        <button onClick={() => window.location.reload()} className="mt-4 px-6 py-2 bg-[#52B788] text-white rounded-xl">Retry</button>
+      </div>
+    );
+  }
+
+      if (loading) return <LoadingSpinner text="Loading..." />;
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-gradient-to-b from-white to-[#F5FEF7]">
+        <AlertCircle size={48} className="text-[#84A98C] mb-4" />
+        <h2 className="text-xl font-bold text-[#1B4D3E] mb-2">{error}</h2>
+        <button onClick={() => navigate('/')} className="btn-primary" style={{ width: 'auto', padding: '12px 24px' }}>
+          Go Home
+        </button>
+      </div>
+    );
+  }
+
   if (!event) return null;
+
+  const assignmentLabel = event.category === 'pairing' ? 'Your partner is:' : 'Your recipient is:';
 
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-white to-[#F5FEF7]">
@@ -162,7 +186,7 @@ export default function PullReveal() {
           <div className="inline-block px-3 py-1 bg-[#E9F5E8] rounded-full text-xs font-medium text-[#2D6A4F] mb-3">
             {event.name}
           </div>
-          <h1 className="text-xl font-bold text-[#1B4D3E]">{event.description || 'Anonymous Gift Exchange'}</h1>
+          <h1 className="text-xl font-bold text-[#1B4D3E]">{event.description || 'Random Draw Event'}</h1>
         </div>
 
         {!revealed ? (
@@ -186,7 +210,7 @@ export default function PullReveal() {
               disabled={!selectedName}
               className="w-full py-4 bg-gradient-to-r from-[#1B4D3E] to-[#2D6A4F] text-white rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              <Eye size={18} /> Reveal my recipient
+              <Eye size={18} /> Reveal my assignment
             </button>
           </div>
         ) : (
@@ -194,7 +218,7 @@ export default function PullReveal() {
             <div className="w-20 h-20 mx-auto bg-[#E9F5E8] rounded-full flex items-center justify-center mb-4">
               <Gift size={40} className="text-[#52B788]" />
             </div>
-            <h2 className="text-2xl font-bold text-[#1B4D3E] mb-2">Your recipient is:</h2>
+            <h2 className="text-2xl font-bold text-[#1B4D3E] mb-2">{assignmentLabel}</h2>
             <p className="text-3xl font-extrabold text-[#52B788] mb-4">{recipient}</p>
             <p className="text-sm text-[#84A98C]">Keep it secret! 🎁</p>
             <Illustration type="socialInteraction" size="sm" className="mt-6 mx-auto" />
