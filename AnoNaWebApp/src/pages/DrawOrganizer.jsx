@@ -46,7 +46,7 @@ export default function DrawOrganizer() {
   }, [id, offline]);
 
   const fetchEvent = async () => {
-    const { data, error } = await supabase.from('draw_events').select('*').eq('id', id).single();
+    const { data, error } = await supabase.from('draw_events').select('*').eq('id', id).maybeSingle();
     if (error || !data) {
       navigate('/');
       return;

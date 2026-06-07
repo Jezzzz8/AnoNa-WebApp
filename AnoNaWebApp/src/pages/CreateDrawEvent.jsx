@@ -1,7 +1,7 @@
 // pages/CreateDrawEvent.jsx
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Users, Gift, Sparkles, Clock, Send, Edit2, Trash2, X, Check } from 'lucide-react';
+import { Plus, Users, Gift, Sparkles, Send, Edit2, Trash2, X, Check, RefreshCw, UserCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
@@ -18,8 +18,8 @@ export default function CreateDrawEvent() {
   const [inputValue, setInputValue] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editValue, setEditValue] = useState('');
-  const [useTimer, setUseTimer] = useState(false);
-  const [expiryMinutes, setExpiryMinutes] = useState(60);
+  const [allowRedraw, setAllowRedraw] = useState(false);     // default OFF
+  const [requireParticipantName, setRequireParticipantName] = useState(false); // default OFF
   const [isCreating, setIsCreating] = useState(false);
   const [offline, setOffline] = useState(!navigator.onLine);
   const inputRef = useRef(null);
@@ -128,9 +128,6 @@ export default function CreateDrawEvent() {
     setIsCreating(true);
     const eventId = crypto.randomUUID().slice(0, 8);
     const deviceId = getDeviceId();
-    const expiresAt = useTimer
-      ? new Date(Date.now() + expiryMinutes * 60000).toISOString()
-      : null;
 
     const shuffled = generateAssignments(participants);
     const assignments = participants.map((p, idx) => ({
@@ -144,9 +141,10 @@ export default function CreateDrawEvent() {
       description: description.trim() || null,
       created_by: deviceId,
       participants: participants,
-      expires_at: expiresAt,
       total_participants: participants.length,
-      reveal_count: 0
+      reveal_count: 0,
+      allow_redraw: allowRedraw,
+      require_name: requireParticipantName
     });
 
     if (eventError) {
@@ -233,7 +231,7 @@ export default function CreateDrawEvent() {
             />
           </div>
 
-          {/* Participants – single input + dynamic list */}
+          {/* Participants */}
           <div>
             <label className="block text-sm font-semibold text-[#52796F] mb-2">
               Participants <span className="text-xs font-normal">({participants.length}/20)</span>
@@ -310,28 +308,40 @@ export default function CreateDrawEvent() {
             )}
           </div>
 
-          {/* Expiry toggle */}
+          {/* Allow Redraw toggle */}
           <div className="bg-[#E9F5E8]/50 rounded-xl p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Clock size={18} className="text-[#52B788]" />
-                <span className="text-sm font-medium text-[#1B4D3E]">Set expiration date</span>
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-white rounded-lg">
+                  <RefreshCw size={18} className="text-[#52B788]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-[#1B4D3E]">Allow redraw</h3>
+                  <p className="text-xs text-[#84A98C] mt-0.5">
+                    Participants may reject their first draw and get one final redraw.
+                  </p>
+                </div>
               </div>
-              <Toggle checked={useTimer} onChange={setUseTimer} size="sm" />
+              <Toggle checked={allowRedraw} onChange={setAllowRedraw} size="sm" />
             </div>
-            {useTimer && (
-              <div className="mt-3">
-                <label className="text-xs text-[#52796F]">Expires after (minutes)</label>
-                <input
-                  type="number"
-                  min="5"
-                  max="43200"
-                  value={expiryMinutes}
-                  onChange={(e) => setExpiryMinutes(parseInt(e.target.value) || 60)}
-                  className="w-full mt-1 px-3 py-2 bg-white border border-[#D8F3DC] rounded-lg text-sm"
-                />
+          </div>
+
+          {/* Require participant name toggle */}
+          <div className="bg-[#E9F5E8]/50 rounded-xl p-4">
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-white rounded-lg">
+                  <UserCheck size={18} className="text-[#52B788]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-[#1B4D3E]">Require participant name</h3>
+                  <p className="text-xs text-[#84A98C] mt-0.5">
+                    Participants must select their name from the list before drawing.
+                  </p>
+                </div>
               </div>
-            )}
+              <Toggle checked={requireParticipantName} onChange={setRequireParticipantName} size="sm" />
+            </div>
           </div>
 
           {/* Create button */}

@@ -28,7 +28,7 @@ function LinkJoinCard() {
       >
         <div className="flex items-center gap-2">
           <Link2 size={18} />
-          <span className="text-sm font-medium">Open an existing link</span>
+          <span className="text-sm font-medium">Open an existing AnoNa link</span>
         </div>
         {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
       </button>
@@ -56,9 +56,6 @@ function LinkJoinCard() {
                   Join
                 </button>
               </div>
-              <p className="text-xs text-[#84A98C] mt-2">
-                Works with PollNa (…/poll/xxx) and DrawNa (…/draw/xxx) links.
-              </p>
             </div>
           </motion.div>
         )}
@@ -71,9 +68,9 @@ export default function Landing() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-[#F5FEF7] to-white flex flex-col items-center justify-center px-5 py-8">
-      <div className="w-full max-w-sm mx-auto">
-        {/* Logo & Title - tighter together */}
+    <div className="min-h-screen bg-gradient-to-br from-white via-[#F5FEF7] to-white flex flex-col px-5 py-8">
+      <div className="w-full max-w-sm mx-auto flex flex-col flex-1">
+        {/* Logo & Title */}
         <div className="text-center">
           <div className="flex justify-center">
             <img
@@ -87,13 +84,8 @@ export default function Landing() {
           </h1>
         </div>
 
-        {/* Hero Illustration */}
-        <div className="my-6 flex justify-center">
-          <Illustration type="socialInteraction" size="lg" animate={false} />
-        </div>
-
         {/* Primary Action Buttons */}
-        <div className="space-y-3">
+        <div className="space-y-3 mt-6">
           <motion.button
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
@@ -113,6 +105,11 @@ export default function Landing() {
             <Gift size={22} />
             Start DrawNa
           </motion.button>
+        </div>
+
+        {/* Illustration placed close to buttons (same gap as between buttons) */}
+        <div className="mt-3 flex justify-center">
+          <Illustration type="socialInteraction" size="lg" animate={false} />
         </div>
 
         {/* Expandable Link Section */}
