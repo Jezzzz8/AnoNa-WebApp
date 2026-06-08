@@ -72,7 +72,8 @@ export default function Waiting() {
   };
 
   useEffect(() => {
-    if (!poll) return <LoadingSpinner text="Loading..." />;
+    if (!poll) return; // ✅ do nothing if poll is not ready
+
     const interval = setInterval(() => {
       const remaining = new Date(poll.expires_at) - new Date();
       if (remaining <= 0) {
@@ -87,6 +88,7 @@ export default function Waiting() {
         setProgress((elapsed / totalDuration) * 100);
       }
     }, 1000);
+
     return () => clearInterval(interval);
   }, [poll, id, navigate]);
 
