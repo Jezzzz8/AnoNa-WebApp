@@ -71,9 +71,9 @@ export default function Result() {
     const isTie = winners.length > 1;
     let text = '';
     if (total === 0) {
-      text = 'AnoNa Result: WalaPa - No votes were cast.';
+      text = 'AnoNa Result: EmptyNa - No votes were cast.';
     } else if (isTie) {
-      text = `AnoNa Result: LabanNa! ${winners.join(' vs ')} tied with ${maxVotes} votes each.`;
+      text = `AnoNa Result: TieNa! ${winners.join(' vs ')} tied with ${maxVotes} votes each.`;
     } else {
       text = `AnoNa Result: SolbNa! ${winners[0]} wins with ${maxVotes} votes.`;
     }
@@ -108,11 +108,11 @@ export default function Result() {
 
   let status = '', subtext = '', icon = null;
   if (total === 0) {
-    status = 'WalaPa';
+    status = 'EmptyNa';
     subtext = 'No votes were cast';
     icon = <Target size={32} className="text-[#84A98C]" />;
   } else if (isTie) {
-    status = 'LabanNa';
+    status = 'TieNa';
     subtext = `${winners.join(' and ')} tied with ${maxVotes} votes each`;
     icon = <Trophy size={32} className="text-[#52B788]" />;
   } else {
