@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Share2, Trophy, Crown, Target, PlusCircle } from 'lucide-react';
+import { Share2, Trophy, Crown, Target, PlusCircle, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import confetti from 'canvas-confetti';
@@ -16,6 +16,7 @@ export default function Result() {
   const [allOptions, setAllOptions] = useState([]);
   const [allVotes, setAllVotes] = useState([]);
   const [offline, setOffline] = useState(!navigator.onLine);
+  const [isExpired, setIsExpired] = useState(false);
 
   useEffect(() => {
     const handleOnline = () => setOffline(false);
@@ -35,7 +36,10 @@ export default function Result() {
 
   const fetchResult = async () => {
     const { data } = await supabase.from('polls').select('*').eq('id', id).single();
-    if (!data) return navigate('/');
+    if (!data) {
+      navigate('/');
+      return;
+    }
     setPoll(data);
     const combinedOptions = [...data.options];
     const combinedVotes = [...data.votes];
@@ -46,7 +50,13 @@ export default function Result() {
     });
     setAllOptions(combinedOptions);
     setAllVotes(combinedVotes);
-    if (navigator.onLine) {
+    
+    // Check if poll is expired
+    const expired = new Date(data.expires_at) < new Date();
+    setIsExpired(expired);
+    
+    if (navigator.onLine && !expired) {
+      // Only trigger confetti for non-expired polls (fresh results)
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 }, colors: ['#1B4D3E', '#2D6A4F', '#52B788', '#95D5B2'] });
       setTimeout(() => {
         confetti({ particleCount: 40, spread: 50, origin: { y: 0.7, x: 0.3 }, colors: ['#52B788', '#2D6A4F'] });
@@ -83,7 +93,7 @@ export default function Result() {
         </div>
         <h2 className="text-xl font-bold text-[#1B4D3E] mb-2">No Internet Connection</h2>
         <p className="text-[#84A98C] text-sm">Please connect to the internet to see poll results.</p>
-        <button onClick={() => window.location.reload()} className="mt-4 px-6 py-2 bg-[#52B788] text-white rounded-xl">Retry</button>
+        <button onClick={() => window.location.reload()} className="mt-4 px-6 py-2 bg-[#52B788] text-black rounded-xl">Retry</button>
       </div>
     );
   }
@@ -114,18 +124,57 @@ export default function Result() {
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-white to-[#F5FEF7]">
       <div className="px-5 py-12 max-w-lg mx-auto pb-32">
-        {(total === 0 || isTie) && <Illustration type="yesNo" size="sm" className="mb-4" animate={false} />}
-        <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 200 }} className="text-center">
-          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#E9F5E8] mb-5">
-            {icon}
-          </motion.div>
-          <motion.h1 initial={{ scale: 0.8 }} animate={{ scale: 1 }} className={`text-5xl font-black mb-2 ${total === 0 ? 'text-[#84A98C]' : isTie ? 'text-[#52B788]' : 'bg-gradient-to-r from-[#1B4D3E] to-[#52B788] bg-clip-text text-transparent'}`}>
+        {/* Expiration Banner */}
+        {isExpired && (
+          <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2 text-amber-700">
+            <Clock size={16} className="flex-shrink-0" />
+            <p className="text-xs font-medium">This poll has ended. Final results are shown below.</p>
+          </div>
+        )}
+
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 200 }}
+          className="text-center"
+        >
+          {/* Status Title */}
+          <motion.h1
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            className={`text-6xl font-black mb-2 ${
+              total === 0
+                ? 'text-[#84A98C]'
+                : isTie
+                ? 'text-[#52B788]'
+                : 'bg-gradient-to-r from-[#1B4D3E] to-[#52B788] bg-clip-text text-transparent'
+            }`}
+          >
             {status}
           </motion.h1>
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-[#52796F] text-sm mb-6">
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-[#52796F] text-sm mb-6"
+          >
             {subtext}
           </motion.p>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white rounded-2xl p-5 my-6 shadow-md border border-[#D8F3DC]">
+
+          {/* Centered Illustration for Ties or Zero Votes */}
+          {(total === 0 || isTie) && (
+            <div className="flex justify-center my-4">
+              <Illustration type="yesNo" size="md" animate={false} />
+            </div>
+          )}
+
+          {/* Results Chart */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white rounded-2xl p-5 my-6 shadow-md border border-[#D8F3DC]"
+          >
             <div className="flex justify-between text-xs text-[#52796F] mb-3 pb-2 border-b border-[#D8F3DC]">
               <span>Choice</span>
               <span>Votes</span>
@@ -135,17 +184,36 @@ export default function Result() {
               const isWinner = allVotes[idx] === maxVotes && maxVotes > 0 && !isTie;
               const isAdditional = idx >= poll.options.length;
               return (
-                <motion.div key={idx} className="mb-3" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }}>
+                <motion.div
+                  key={idx}
+                  className="mb-3"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                >
                   <div className="flex justify-between text-xs mb-1">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <span className={`truncate ${isWinner ? 'text-[#1B4D3E] font-semibold' : 'text-[#52796F]'}`}>{opt}</span>
-                      {isAdditional && <span className="text-[10px] px-1.5 py-0.5 bg-[#E9F5E8] rounded-full text-[#52B788] flex-shrink-0">suggested</span>}
+                      <span className={`truncate ${isWinner ? 'text-[#1B4D3E] font-semibold' : 'text-[#52796F]'}`}>
+                        {opt}
+                      </span>
+                      {isAdditional && (
+                        <span className="text-[10px] px-1.5 py-0.5 bg-[#E9F5E8] rounded-full text-[#52B788] flex-shrink-0">
+                          suggested
+                        </span>
+                      )}
                       {isWinner && <Crown size={10} className="text-[#52B788] flex-shrink-0" />}
                     </div>
-                    <span className={`text-xs ${isWinner ? 'text-[#1B4D3E] font-semibold' : 'text-[#84A98C]'}`}>{allVotes[idx]}</span>
+                    <span className={`text-xs ${isWinner ? 'text-[#1B4D3E] font-semibold' : 'text-[#84A98C]'}`}>
+                      {allVotes[idx]}
+                    </span>
                   </div>
                   <div className="h-2 bg-[#E9F5E8] rounded-full overflow-hidden">
-                    <motion.div className={`h-full rounded-full ${isWinner ? 'bg-gradient-to-r from-[#52B788] to-[#2D6A4F]' : 'bg-[#95D5B2]'}`} initial={{ width: 0 }} animate={{ width: `${percent}%` }} transition={{ duration: 0.5, delay: idx * 0.05 }} />
+                    <motion.div
+                      className={`h-full rounded-full ${isWinner ? 'bg-gradient-to-r from-[#52B788] to-[#2D6A4F]' : 'bg-[#95D5B2]'}`}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${percent}%` }}
+                      transition={{ duration: 0.5, delay: idx * 0.05 }}
+                    />
                   </div>
                 </motion.div>
               );
@@ -157,7 +225,11 @@ export default function Result() {
               </div>
             )}
           </motion.div>
-          <button onClick={shareResult} className="w-full py-3 bg-gradient-to-r from-[#1B4D3E] to-[#2D6A4F] text-white rounded-xl flex items-center justify-center gap-2 text-sm font-semibold shadow-md hover:shadow-lg transition-all">
+
+          <button
+            onClick={shareResult}
+            className="w-full py-3 bg-gradient-to-r from-[#1B4D3E] to-[#2D6A4F] text-black rounded-xl flex items-center justify-center gap-2 text-sm font-semibold shadow-md hover:shadow-lg transition-all"
+          >
             <Share2 size={16} /> Share Result
           </button>
         </motion.div>

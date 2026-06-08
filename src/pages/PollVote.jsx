@@ -44,33 +44,46 @@ export default function Vote() {
       .channel(`poll-${id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'polls', filter: `id=eq.${id}` }, payload => {
         if (payload.new) {
-          setPoll(payload.new);
-          const combinedOptions = [...payload.new.options];
-          const additionalOptions = payload.new.additional_options || [];
-          const combinedVotes = [...payload.new.votes];
+          const updatedPoll = payload.new;
+          setPoll(updatedPoll);
+          const combinedOptions = [...updatedPoll.options];
+          const additionalOptions = updatedPoll.additional_options || [];
+          const combinedVotes = [...updatedPoll.votes];
           additionalOptions.forEach(opt => {
             combinedOptions.push(opt.text);
             combinedVotes.push(opt.votes);
           });
           setAllOptions(combinedOptions);
           setAllVotes(combinedVotes);
+          
+          // If poll just expired, redirect to results
+          if (new Date(updatedPoll.expires_at) < new Date()) {
+            toast.error('This poll has ended. Redirecting to results...');
+            navigate(`/poll/result/${id}`);
+          }
         }
       })
       .subscribe();
+
     return () => subscription.unsubscribe();
-  }, [id, offline]);
+  }, [id, offline, navigate]);
 
   const fetchPoll = async () => {
     try {
       const { data, error } = await supabase.from('polls').select('*').eq('id', id).single();
       if (error || !data) {
         setError('Link not found');
+        setLoading(false);
         return;
       }
+      
+      // Check if poll is expired
       if (new Date(data.expires_at) < new Date()) {
-        setError('This poll has expired');
+        toast.error('This poll has ended. Redirecting to results...');
+        navigate(`/poll/result/${id}`);
         return;
       }
+      
       setPoll(data);
       const combinedOptions = [...data.options];
       const additionalOptions = data.additional_options || [];
@@ -122,7 +135,7 @@ export default function Vote() {
         .eq('id', id);
       if (!error) {
         saveVoteRecord(id, deviceId);
-        setTimeout(() => navigate(`/waiting/${id}`), 500);
+        setTimeout(() => navigate(`/poll/waiting/${id}`), 500);
       } else {
         toast.error('Failed to cast vote');
         setSelectedIdx(null);
@@ -179,8 +192,8 @@ export default function Vote() {
   }
 
   if (loading) {
-  return <LoadingSpinner text="Loading..." />;
-}
+    return <LoadingSpinner text="Loading..." />;
+  }
 
   if (error) {
     return (
@@ -202,7 +215,7 @@ export default function Vote() {
         </div>
         <h2 className="text-xl font-bold text-[#1B4D3E] mb-2">You already voted!</h2>
         <p className="text-[#84A98C] text-sm mb-6">Thanks for participating</p>
-        <button onClick={() => navigate(`/waiting/${id}`)} className="btn-primary" style={{ width: 'auto', padding: '12px 24px' }}>
+        <button onClick={() => navigate(`/poll/waiting/${id}`)} className="btn-primary" style={{ width: 'auto', padding: '12px 24px' }}>
           See live results →
         </button>
       </div>
